@@ -5,50 +5,68 @@
 
 std::filesystem::path getLogPath()
 {
-	std::filesystem::path cwd = std::filesystem::current_path();
+	WCHAR path[MAX_PATH];
+	GetModuleFileNameW(NULL, path, MAX_PATH);
+
+	std::filesystem::path logPath(path);
 #ifdef _DEBUG
-	cwd = (cwd / "../../../").lexically_normal();
+	logPath = (logPath / "../../..").lexically_normal();
 #endif
-	return cwd / "logs";
+	return logPath / "../logs";
 }
 
-void createConsole(const std::wstring& title = L"Ion Console")
+namespace ion::Console
 {
-	FILE* conin = stdin;
-	FILE* conout = stdout;
-	FILE* conerr = stderr;
+	struct Scope
+	{
+		Scope(const std::wstring& title)
+		{
+#ifdef _DEBUG
+			FILE* conin = stdin;
+			FILE* conout = stdout;
+			FILE* conerr = stderr;
 
-	if (!AttachConsole(ATTACH_PARENT_PROCESS))
-		AllocConsole();
+			if (!AttachConsole(ATTACH_PARENT_PROCESS))
+				AllocConsole();
 
-	freopen_s(&conin, "CONIN$", "r", stdin);
-	freopen_s(&conout, "CONOUT$", "w", stdout);
-	freopen_s(&conerr, "CONOUT$", "w", stderr);
+			freopen_s(&conin, "CONIN$", "r", stdin);
+			freopen_s(&conout, "CONOUT$", "w", stdout);
+			freopen_s(&conerr, "CONOUT$", "w", stderr);
 
-	SetConsoleTitle(title.c_str());
-}
+			SetConsoleTitle(title.c_str());
+#endif
+		}
 
-void destroyConsole()
-{
-	FreeConsole();
+		Scope(const Scope&) = delete;
+		Scope(Scope&&) = delete;
+
+		~Scope()
+		{
+#ifdef _DEBUG
+			FreeConsole();
+#endif
+		}
+	};
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-	createConsole();
-
-	const std::filesystem::path logPath = getLogPath();
-
-	ion::Logger::scoped(logPath, [](ion::Logger& logger)
+	try
 	{
-		logger.debug("Hello, World! :)");
-		logger.info("INFO TEST");
-		logger.fatal("FATAL TEST");
-		logger.warn("Warning test");
-		logger.error("Error test");
-	});
+		const ion::Console::Scope scope(L"Ion Debug Console");
 
-	destroyConsole();
-	
-	return 0;
+		const std::filesystem::path logPath = getLogPath();
+
+		ion::Logger::scoped(logPath, [](ion::Logger& logger)
+		{
+			throw std::runtime_error("Exception test :D");
+		});
+
+		return 0;
+	}
+	catch(const std::runtime_error& e)
+	{
+		MessageBoxA(NULL, e.what(), "Runtime Error", MB_OK);
+		return 1;
+	}
 }

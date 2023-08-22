@@ -75,7 +75,8 @@ namespace ion
 			}
 			catch (const std::exception& e)
 			{
-				logger.fatal(e);
+				logger.fatal("Uncaught Exception: ", e);
+				std::rethrow_exception(std::current_exception());
 			}
 
 			dispose();
@@ -92,19 +93,7 @@ namespace ion
 		static void scoped(const std::filesystem::path& path, ScopeCallback scope)
 		{
 			const std::string p = path.string();
-
-			Logger& logger = init(p);
-
-			try
-			{
-				scope(logger);
-			}
-			catch (const std::exception& e)
-			{
-				logger.fatal(e);
-			}
-
-			dispose();
+			scoped(std::string_view(p), scope);
 		}
 
 		static Logger& get();
@@ -132,8 +121,10 @@ namespace ion
 		template<typename... Ts>
 		void debug(Ts&&... args)
 		{
+#ifdef _DEBUG
 			std::string msg = stringer(std::forward<Ts>(args)...);
 			send(Level::DEBUG, std::move(msg));
+#endif
 		}
 
 		template<typename... Ts>

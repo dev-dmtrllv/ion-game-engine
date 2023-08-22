@@ -1,6 +1,6 @@
 {
 	"C_Cpp.default.cppStandard": "c++23",
-	"C_Cpp.default.cStandard": "gnu23",
+	"C_Cpp.default.cStandard": "c23",
     "C_Cpp.formatting": "vcFormat",
     "editor.tabSize": 4,
     "editor.insertSpaces": false,

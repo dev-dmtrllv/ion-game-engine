@@ -16,18 +16,19 @@ namespace ion
 		char buf[29] = { '\0' };
 		std::strftime(buf, 21, "%Y-%m-%dT %H:%M:%S", s);
 
-		printf("%s ", buf);
-
 		const std::size_t index = static_cast<std::size_t>(level);
-
-		auto color = colors_[index];
 		auto levelString = levels_[index];
-
+		
+#ifdef _DEBUG
+		auto color = colors_[index];
+		
+		printf("%s ", buf);
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 		printf("[%s]", levelString);
 
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), resetColor_);
 		printf(" %s\n", msg.data());
+#endif
 
 		file << std::format("{} [{}] {}\n", buf, levelString, msg.data());
 	}
@@ -38,16 +39,16 @@ namespace ion
 		3, // INFO
 		1, // DEBUG
 		6, // WARN
+		4, // ERROR
 		12, // FATAL
-		4 // ERROR
 	};
 
 	std::array<const char*, 5> Logger::levels_ = {
 		"INFO",
 		"DEBUG",
 		"WARN",
+		"ERROR",
 		"FATAL",
-		"ERROR"
 	};
 
 	const WORD Logger::resetColor_ = 0xF;
