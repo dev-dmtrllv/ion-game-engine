@@ -1,31 +1,54 @@
 #include "pch.hpp"
 
+#include "Logger.hpp"
+#include <strsafe.h>
+
+std::filesystem::path getLogPath()
+{
+	std::filesystem::path cwd = std::filesystem::current_path();
+#ifdef _DEBUG
+	cwd = (cwd / "../../../").lexically_normal();
+#endif
+	return cwd / "logs";
+}
+
+void createConsole(const std::wstring& title = L"Ion Console")
+{
+	FILE* conin = stdin;
+	FILE* conout = stdout;
+	FILE* conerr = stderr;
+
+	if (!AttachConsole(ATTACH_PARENT_PROCESS))
+		AllocConsole();
+
+	freopen_s(&conin, "CONIN$", "r", stdin);
+	freopen_s(&conout, "CONOUT$", "w", stdout);
+	freopen_s(&conerr, "CONOUT$", "w", stderr);
+
+	SetConsoleTitle(title.c_str());
+}
+
+void destroyConsole()
+{
+	FreeConsole();
+}
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-	std::unique_ptr<v8::Platform> platform = v8::platform::NewDefaultPlatform();
-	v8::V8::InitializePlatform(platform.get());
-	v8::V8::Initialize();
+	createConsole();
 
-	v8::Isolate::CreateParams create_params;
-	create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
-	v8::Isolate* isolate = v8::Isolate::New(create_params);
+	const std::filesystem::path logPath = getLogPath();
+
+	ion::Logger::scoped(logPath, [](ion::Logger& logger)
 	{
-		v8::Isolate::Scope isolate_scope(isolate);
-		v8::HandleScope handle_scope(isolate);
-		v8::Local<v8::Context> context = v8::Context::New(isolate);
-		v8::Context::Scope context_scope(context);
-		v8::Local<v8::String> source = v8::String::NewFromUtf8(isolate, "'Hello' + ', World!'", v8::NewStringType::kNormal).ToLocalChecked();
-		v8::Local<v8::Script> script = v8::Script::Compile(context, source).ToLocalChecked();
-		v8::Local<v8::Value> result = script->Run(context).ToLocalChecked();
-		v8::String::Utf8Value utf8(isolate, result);
+		logger.debug("Hello, World! :)");
+		logger.info("INFO TEST");
+		logger.fatal("FATAL TEST");
+		logger.warn("Warning test");
+		logger.error("Error test");
+	});
 
-		MessageBoxA(NULL, "JS Output", *utf8, MB_OK);
-	}
+	destroyConsole();
 	
-	isolate->Dispose();
-	delete create_params.array_buffer_allocator;
-	v8::V8::Dispose();
-	v8::V8::DisposePlatform();
-
 	return 0;
 }
