@@ -13,7 +13,7 @@ include_directories(ion include)
 target_link_libraries(ion opengl32)
 
 if(MSVC)
-	add_definitions(-DUNICODE -D_UNICODE)
+	add_definitions(-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS)
 	add_compile_options(/W4 /WX)
 else()
 	add_compile_options(-Wall -Wextra -Wpedantic -Werror)
@@ -21,10 +21,8 @@ endif()
 
 set_property(TARGET ion PROPERTY CXX_STANDARD 23)
 
-
+include_directories(ion SYSTEM "dependencies/includes/v8")
 if (WIN32)
-	include_directories(ion SYSTEM ${PROJECT_SOURCE_DIR}/dependencies/includes/v8)
-
 	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     	set(V8_TYPE "debug")
 	else()
@@ -34,6 +32,7 @@ if (WIN32)
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 	add_definitions(-D_ITERATOR_DEBUG_LEVEL=0 -DV8_COMPRESS_POINTERS)
+
 	STRING (REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 	STRING (REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 	STRING (REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")

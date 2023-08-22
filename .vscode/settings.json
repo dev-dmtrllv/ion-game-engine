@@ -1,6 +1,13 @@
 {
-	"files.associations": {
-		"*.embeddedhtml": "html",
-		"coroutine": "cpp"
-	}
+	"C_Cpp.default.cppStandard": "c++23",
+	"C_Cpp.default.cStandard": "gnu23",
+    "C_Cpp.formatting": "vcFormat",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": false,
+	"C_Cpp.vcFormat.indent.lambdaBracesWhenParameter": false,
+	"cmake.debugConfig": {
+        "args": [
+            "test", "args", "1", "2", "3"
+        ]
+    }
 }
