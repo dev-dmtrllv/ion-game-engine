@@ -1,7 +1,7 @@
 #include "pch.hpp"
 
 #include "Logger.hpp"
-#include <strsafe.h>
+#include "Lazy.hpp"
 
 std::filesystem::path getLogPath()
 {
@@ -57,14 +57,33 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 		const std::filesystem::path logPath = getLogPath();
 
+		const std::size_t lambdaSize = sizeof(std::function<int()>);
+
 		ion::Logger::scoped(logPath, [](ion::Logger& logger)
 		{
-			throw std::runtime_error("Exception test :D");
+			struct Test
+			{
+				Test(int x) : x(x) {};
+
+				const std::string log() const { return std::format("Test {{ x: {} }}", x); }
+
+				int x;
+			};
+
+			ion::Lazy<Test> lazy([&] { return Test(123); });
+
+			logger.info(lazy());
+
+			lazy = 4;
+			logger.info(lazy());
+
+			lazy = [&] { return Test(456); };
+			logger.info(lazy());
 		});
 
 		return 0;
 	}
-	catch(const std::runtime_error& e)
+	catch (const std::runtime_error& e)
 	{
 		MessageBoxA(NULL, e.what(), "Runtime Error", MB_OK);
 		return 1;
