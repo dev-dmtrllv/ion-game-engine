@@ -2,7 +2,7 @@
 
 #include "pch.hpp"
 
-namespace ion::Bench
+namespace ion::Benchmark
 {
 	inline double time(auto callback)
 	{
