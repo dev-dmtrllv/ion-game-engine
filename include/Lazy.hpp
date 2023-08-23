@@ -48,23 +48,35 @@ namespace ion
 		}
 
 	public:
-		Lazy(const Lazy<T>& other) = delete;
-		Lazy(Lazy<T>&&) = delete;
+		Lazy(const Lazy<T>& other)
+		{
+			memcpy(buffer_, other.buffer_, bufferSize());
+			getter_ = other.getter_;
+			dtor_ = other.dtor_;
+		}
+
+		Lazy(Lazy<T>&& other)
+		{
+			memcpy(buffer_, other.buffer_, bufferSize());
+
+			getter_ = std::move(other.getter_);
+			dtor_ = std::move(other.dtor_);
+		}
 
 		Lazy(const Initializer& initializer)
 		{
 			memset(buffer_, 0, bufferSize());
-			
+
 			*buffer<Initializer>() = initializer;
 
 			dtor_ = initDtor;
 			getter_ = initGetter;
 		}
-		
+
 		Lazy(Initializer&& initializer)
 		{
 			memset(buffer_, 0, bufferSize());
-			
+
 			*buffer<Initializer>() = std::forward<Initializer>(initializer);
 
 			dtor_ = initDtor;
@@ -79,6 +91,26 @@ namespace ion
 		T& operator()()
 		{
 			return getter_(*this);
+		}
+
+		Lazy<T>& operator=(const Lazy<T>& other)
+		{
+			memcpy(buffer_, other.buffer_, bufferSize());
+
+			getter_ = other.getter_;
+			dtor_ = other.dtor_;
+
+			return *this;
+		}
+
+		Lazy<T>& operator=(Lazy<T>&& other)
+		{
+			memcpy(buffer_, other.buffer_, bufferSize());
+
+			getter_ = std::move(other.getter_);
+			dtor_ = std::move(other.dtor_);
+
+			return *this;
 		}
 
 		Lazy<T>& operator=(const T& value)
@@ -108,15 +140,15 @@ namespace ion
 		void reset(const T& value)
 		{
 			dtor_(*this);
-			// memset(buffer_, 0, bufferSize());
 			new (buffer<T>()) T(std::forward<T>(value));
+			getter_ = evaluatedGetter;
 		}
 
 		void reset(T&& value)
 		{
 			dtor_(*this);
-			// memset(buffer_, 0, bufferSize());
 			new (buffer<T>()) T(std::forward<T>(value));
+			getter_ = evaluatedGetter;
 		}
 
 		void reset(Initializer&& initializer)
@@ -133,11 +165,21 @@ namespace ion
 
 		void reset(const Initializer& initializer)
 		{
+			dtor_(*this);
+
 			memset(buffer_, 0, bufferSize());
 
 			*(buffer<Initializer>()) = initializer;
 
 			getter_ = initGetter;
+		}
+
+		template<typename... Args>
+		void reset(Args&&... args)
+		{
+			dtor_(*this);
+			new (buffer<T>()) T(std::forward<Args>(args)...);
+			getter_ = evaluatedGetter;
 		}
 
 	private:

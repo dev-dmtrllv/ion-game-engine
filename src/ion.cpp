@@ -2,6 +2,7 @@
 
 #include "Logger.hpp"
 #include "Lazy.hpp"
+#include "Console.hpp"
 
 std::filesystem::path getLogPath()
 {
@@ -15,71 +16,58 @@ std::filesystem::path getLogPath()
 	return logPath / "../logs";
 }
 
-namespace ion::Console
+void run(ion::Logger& logger)
 {
-	struct Scope
+	using namespace ion;
+
+	struct Vector
 	{
-		Scope(const std::wstring& title)
+		Vector(float xyz) :
+			x(xyz),
+			y(xyz),
+			z(xyz)
+		{}
+
+		Vector(float x, float y, float z) :
+			x(x),
+			y(y),
+			z(z)
+		{}
+
+		std::string log() const
 		{
-#ifdef _DEBUG
-			FILE* conin = stdin;
-			FILE* conout = stdout;
-			FILE* conerr = stderr;
-
-			if (!AttachConsole(ATTACH_PARENT_PROCESS))
-				AllocConsole();
-
-			freopen_s(&conin, "CONIN$", "r", stdin);
-			freopen_s(&conout, "CONOUT$", "w", stdout);
-			freopen_s(&conerr, "CONOUT$", "w", stderr);
-
-			SetConsoleTitle(title.c_str());
-#endif
+			return std::format("Vector {{ x: {}, y: {}, z: {} }}", x, y, z);
 		}
 
-		Scope(const Scope&) = delete;
-		Scope(Scope&&) = delete;
-
-		~Scope()
-		{
-#ifdef _DEBUG
-			FreeConsole();
-#endif
-		}
+		float x;
+		float y;
+		float z;
 	};
+
+	float xyz = 12345.678f;
+
+	Lazy<Vector> lazy([&]() -> Vector { return xyz; });
+
+	Lazy<Vector> lazy2(std::move(lazy));
+
+	logger.debug(lazy2()); // only now will the lazy vector be calculated
+
+	lazy2.reset(5.0f, 6.0f, 7.0f); // reset the lazy vector with arguments
+
+	logger.debug(lazy2()); // lazy vector is already initialized with the arguments from above
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
 	try
 	{
-		const ion::Console::Scope scope(L"Ion Debug Console");
+		using namespace ion;
+
+		const Console::Scope scope(L"Ion Debug Console");
 
 		const std::filesystem::path logPath = getLogPath();
 
-		const std::size_t lambdaSize = sizeof(std::function<int()>);
-
-		ion::Logger::scoped(logPath, [](ion::Logger& logger)
-		{
-			struct Test
-			{
-				Test(int x) : x(x) {};
-
-				const std::string log() const { return std::format("Test {{ x: {} }}", x); }
-
-				int x;
-			};
-
-			ion::Lazy<Test> lazy([&] { return Test(123); });
-
-			logger.info(lazy());
-
-			lazy = 4;
-			logger.info(lazy());
-
-			lazy = [&] { return Test(456); };
-			logger.info(lazy());
-		});
+		Logger::scoped(logPath, run);
 
 		return 0;
 	}
