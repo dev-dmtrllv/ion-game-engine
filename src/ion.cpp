@@ -3,6 +3,7 @@
 #include "Logger.hpp"
 #include "Lazy.hpp"
 #include "Console.hpp"
+#include "Process.hpp"
 
 std::filesystem::path getLogPath()
 {
@@ -16,7 +17,15 @@ std::filesystem::path getLogPath()
 	return logPath / "../logs";
 }
 
+void runLazy(ion::Logger& logger);
+
 void run(ion::Logger& logger)
+{
+	logger.debug("Parent pid: ", ion::Process::getParentID(_getpid()));
+	runLazy(logger);
+}
+
+void runLazy(ion::Logger& logger)
 {
 	using namespace ion;
 
@@ -69,11 +78,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 		Logger::scoped(logPath, run);
 
+		system("pause");
+
 		return 0;
 	}
 	catch (const std::runtime_error& e)
 	{
 		MessageBoxA(NULL, e.what(), "Runtime Error", MB_OK);
+		return 1;
+	}
+	catch(const std::exception& e)
+	{
+		MessageBoxA(NULL, e.what(), "Unknown Exception", MB_OK);
 		return 1;
 	}
 }
