@@ -1,0 +1,16 @@
+{
+	"name": "ion",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"build-scripts": "tsc --project ./scripts/tsconfig.json",
+		"watch-scripts": "tsc --project ./scripts/tsconfig.json --watch",
+		"build-v8": "npm run build-scripts && node ./scripts/dist/build-v8.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"typescript": "^5.1.6"
+	}
+}

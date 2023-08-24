@@ -1,3 +1,5 @@
 dependencies
 out
 logs
+node_modules
+scripts/dist
