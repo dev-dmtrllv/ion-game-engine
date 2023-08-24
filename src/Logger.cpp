@@ -22,7 +22,6 @@ namespace ion
 #ifdef _DEBUG
 		auto color = colors_[index];
 		
-		printf("%s ", buf);
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 		printf("[%s]", levelString);
 
