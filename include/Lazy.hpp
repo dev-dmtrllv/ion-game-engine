@@ -13,26 +13,24 @@ namespace ion
 		using Getter = T & (*)(Self&);
 		using Dtor = void(*)(Self&);
 
-		static consteval std::size_t bufferSize()
+		[[nodiscard]] static consteval std::size_t bufferSize() noexcept
 		{
 			constexpr std::size_t a = sizeof(T);
 			constexpr std::size_t b = sizeof(Initializer);
 			return (a > b ? a : b) / sizeof(char);
 		}
 
-		static void initDtor(Self& self)
+		static void initDtor(Self& self) noexcept
 		{
-			Initializer* init = self.buffer<Initializer>();
-			init->~Initializer();
+			self.buffer<Initializer>()->~Initializer();
 		}
 
-		static void evaluatedDtor(Self& self)
+		static void evaluatedDtor(Self& self) noexcept
 		{
-			T* init = self.buffer<T>();
-			init->~T();
+			self.buffer<T>()->~T();
 		}
 
-		static T& initGetter(Self& self)
+		[[nodiscard]] static T& initGetter(Self& self)
 		{
 			Initializer* init = self.buffer<Initializer>();
 			T* valuePtr = self.buffer<T>();
@@ -42,7 +40,7 @@ namespace ion
 			return *valuePtr;
 		}
 
-		static T& evaluatedGetter(Self& self)
+		[[nodiscard]] static T& evaluatedGetter(Self& self)
 		{
 			return *self.buffer<T>();
 		}
@@ -88,12 +86,12 @@ namespace ion
 			dtor_(*this);
 		}
 
-		T& operator()()
+		[[nodiscard]] T& operator()()
 		{
 			return getter_(*this);
 		}
 
-		Lazy<T>& operator=(const Lazy<T>& other)
+		[[nodiscard]] Lazy<T>& operator=(const Lazy<T>& other)
 		{
 			memcpy(buffer_, other.buffer_, bufferSize());
 
@@ -103,7 +101,7 @@ namespace ion
 			return *this;
 		}
 
-		Lazy<T>& operator=(Lazy<T>&& other)
+		[[nodiscard]] Lazy<T>& operator=(Lazy<T>&& other)
 		{
 			memcpy(buffer_, other.buffer_, bufferSize());
 
@@ -113,25 +111,25 @@ namespace ion
 			return *this;
 		}
 
-		Lazy<T>& operator=(const T& value)
+		[[nodiscard]] Lazy<T>& operator=(const T& value)
 		{
 			reset(value);
 			return *this;
 		}
 
-		Lazy<T>& operator=(T&& value)
+		[[nodiscard]] Lazy<T>& operator=(T&& value)
 		{
 			reset(std::forward<T>(value));
 			return *this;
 		}
 
-		Lazy<T>& operator=(const Initializer& initializer)
+		[[nodiscard]] Lazy<T>& operator=(const Initializer& initializer)
 		{
 			reset(initializer);
 			return *this;
 		}
 
-		Lazy<T>& operator=(Initializer&& initializer)
+		[[nodiscard]] Lazy<T>& operator=(Initializer&& initializer)
 		{
 			reset(std::forward<Initializer>(initializer));
 			return *this;
@@ -183,8 +181,8 @@ namespace ion
 		}
 
 	private:
-		template<typename T>
-		T* buffer() { return static_cast<T*>(static_cast<void*>(buffer_)); }
+		template<typename ReturnType>
+		ReturnType* buffer() noexcept { return static_cast<ReturnType*>(static_cast<void*>(buffer_)); }
 
 		Getter getter_;
 		Dtor dtor_;
