@@ -3,10 +3,6 @@
 		{
 			"name": "ion",
 			"path": "."
-		},
-		{
-			"name": "test-game",
-			"path": "../ion-test-game"
 		}
 	],
 	"settings": {
