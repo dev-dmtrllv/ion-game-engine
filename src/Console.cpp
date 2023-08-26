@@ -1,8 +1,8 @@
 #include "Console.hpp"
 
-namespace ion::Console
+namespace ion
 {
-	Scope::Scope(const std::wstring& title)
+	Console::Console(const std::wstring& title)
 	{
 #ifdef _DEBUG
 		FILE* conin = stdin;
@@ -20,7 +20,7 @@ namespace ion::Console
 #endif
 	}
 
-	Scope::~Scope()
+	Console::~Console()
 	{
 #ifdef _DEBUG
 		FreeConsole();

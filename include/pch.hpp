@@ -13,6 +13,8 @@
 #include <fcntl.h>
 #include <shellapi.h>
 #include <dwmapi.h>
+#include <tlhelp32.h>
+#include <psapi.h>
 
 #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
@@ -62,8 +64,8 @@
 
 
 // ------------  SDL, OpenGL, V8 ------------- //
-// #include <v8.h>
-// #include <libplatform/libplatform.h>
+#include <v8.h>
+#include <libplatform/libplatform.h>
 // ------------  SDL, OpenGL, V8 ------------- //
 
 

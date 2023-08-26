@@ -3,15 +3,15 @@
 #include "pch.hpp"
 
 
-namespace ion::Console
+namespace ion
 {
-	struct Scope
+	struct Console
 	{
-		Scope(const std::wstring& title);
+		Console(const std::wstring& title);
 
-		Scope(const Scope&) = delete;
-		Scope(Scope&&) = delete;
+		Console(const Console&) = delete;
+		Console(Console&&) = delete;
 
-		~Scope();
+		~Console();
 	};
 }

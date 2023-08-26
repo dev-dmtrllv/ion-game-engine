@@ -65,9 +65,11 @@ namespace ion
 		 * @param scope The scope in which the logger is available
 		 */
 		template<typename ScopeCallback>
-		static void scoped(std::string_view path, ScopeCallback scope)
+		static void scoped(const std::filesystem::path& path, ScopeCallback scope)
 		{
-			Logger& logger = init(path);
+			const std::string p = path.string();
+			
+			Logger& logger = init(p);
 
 			try
 			{
@@ -80,20 +82,6 @@ namespace ion
 			}
 
 			dispose();
-		}
-
-		/**
-		 * @brief This will create a scoped logger which will be diposed at the end of scope
-		 *
-		 * @tparam ScopeCallback
-		 * @param path The path where the logger should create its log files
-		 * @param scope The scope in which the logger is available
-		 */
-		template<typename ScopeCallback>
-		static void scoped(const std::filesystem::path& path, ScopeCallback scope)
-		{
-			const std::string p = path.string();
-			scoped(std::string_view(p), scope);
 		}
 
 		static Logger& get();

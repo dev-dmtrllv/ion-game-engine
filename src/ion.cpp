@@ -4,66 +4,67 @@
 #include "Lazy.hpp"
 #include "Console.hpp"
 #include "Process.hpp"
+#include "App.hpp"
+#include "ScriptManager.hpp"
+#include "Utils.hpp"
 
-std::filesystem::path getLogPath()
+
+std::vector<std::string> getArgs()
 {
-	WCHAR path[MAX_PATH];
-	GetModuleFileNameW(NULL, path, MAX_PATH);
-
-	std::filesystem::path logPath(path);
-#ifdef _DEBUG
-	logPath = (logPath / "../../..").lexically_normal();
-#endif
-	return logPath / "../logs";
-}
-
-void runLazy(ion::Logger& logger);
-
-void run(ion::Logger& logger)
-{
-	logger.debug("Parent pid: ", ion::Process::getParentID(_getpid()));
-	runLazy(logger);
-}
-
-void runLazy(ion::Logger& logger)
-{
-	using namespace ion;
-
-	struct Vector
+	auto argvStr = std::string(GetCommandLineA());
+	std::vector<std::string> args;
+	std::string buffer;
+	for (char c : argvStr)
 	{
-		Vector(float xyz) :
-			x(xyz),
-			y(xyz),
-			z(xyz)
-		{}
-
-		Vector(float x, float y, float z) :
-			x(x),
-			y(y),
-			z(z)
-		{}
-
-		std::string log() const
+		if (c == ' ')
 		{
-			return std::format("Vector {{ x: {}, y: {}, z: {} }}", x, y, z);
+			if (buffer.size() > 0)
+			{
+				args.emplace_back(buffer);
+				buffer.clear();
+			}
 		}
+		else
+		{
+			buffer += c;
+		}
+	}
+	if (buffer.size() > 0)
+		args.emplace_back(buffer);
 
-		float x;
-		float y;
-		float z;
-	};
+	return args;
+}
 
-	float xyz = 12345.678f;
+std::filesystem::path getAppPath(const std::vector<std::string>& args)
+{
+	std::filesystem::path p;
+	
+	if (args.size() > 1)
+	{
+		p = args.at(1);
 
-	Lazy<Vector> lazy([&]() -> Vector { return xyz; });
+		if (p.is_relative())
+		{
+			if (std::filesystem::exists(std::filesystem::current_path() / p))
+				p = std::filesystem::current_path() / p;
+			else
+				p = std::filesystem::path(args.at(0)) / ".." / p;
+		}
+	}
+	else
+	{
+		p = std::filesystem::path(args.at(0)) / "..";
+	}
 
-	Lazy<Vector> lazy2(std::move(lazy));
+	p = p.lexically_normal();
 
-	logger.debug(lazy2()); // only now will the lazy vector be calculated
+	if(!std::filesystem::exists(p))
+	{
+		std::string err = std::format("App path \"{}\"does not exists!", p.string());
+		throw std::runtime_error(err.c_str());
+	}
 
-	lazy2.reset(5.0f, 6.0f, 7.0f); // reset the lazy vector with arguments
-
-	logger.debug(lazy2()); // lazy vector is already initialized with the arguments from above
+	return p;
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
@@ -72,11 +73,22 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	{
 		using namespace ion;
 
-		const Console::Scope scope(L"Ion Debug Console");
+		const Console console(L"Ion Debug Console");
 
-		const std::filesystem::path logPath = getLogPath();
+		const std::vector<std::string> args = getArgs();
+		const std::filesystem::path appPath = getAppPath(args);
+		
+		const std::filesystem::path logPath = appPath / "logs";
 
-		Logger::scoped(logPath, run);
+		Logger::scoped(logPath, [&](Logger& logger)
+		{
+			logger.info("Found app path: ", appPath);
+			
+			App::scoped(appPath.string(), [](const App& app)
+			{
+				
+			});
+		});
 
 		system("pause");
 
@@ -87,7 +99,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		MessageBoxA(NULL, e.what(), "Runtime Error", MB_OK);
 		return 1;
 	}
-	catch(const std::exception& e)
+	catch (const std::exception& e)
 	{
 		MessageBoxA(NULL, e.what(), "Unknown Exception", MB_OK);
 		return 1;

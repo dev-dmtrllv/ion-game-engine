@@ -64,7 +64,7 @@ namespace ion
 
 	Logger& Logger::init(std::string_view path)
 	{
-		namespace Fs = std::filesystem;
+		namespace fs = std::filesystem;
 
 		if (instance_.has_value())
 			throw std::runtime_error("Logger is already initialized");
@@ -75,26 +75,26 @@ namespace ion
 
 		std::strftime(buf, 21, "%Y-%m-%d", s);
 
-		Fs::path fsPath = Fs::path(path);
+		fs::path fsPath = fs::path(path);
 
-		if (Fs::is_regular_file(fsPath))
+		if (fs::is_regular_file(fsPath))
 		{
 			std::string msg = std::format("Cannot use a file as a log directory! Tried to use {}!", fsPath.string());
 			throw std::runtime_error(msg.c_str());
 		}
 
-		if (!Fs::exists(fsPath))
-			Fs::create_directory(fsPath);
+		if (!fs::exists(fsPath))
+			fs::create_directory(fsPath);
 
-		Fs::path dir = fsPath / buf;
+		fs::path dir = fsPath / buf;
 
-		if (Fs::is_directory(fsPath))
+		if (fs::is_directory(fsPath))
 		{
 			std::size_t version = 0;
 
-			Fs::path check = dir.string() + ".log";
+			fs::path check = dir.string() + ".log";
 
-			while (Fs::exists(check))
+			while (fs::exists(check))
 			{
 				version++;
 				check = dir.string() + "_" + std::to_string(version) + ".log";

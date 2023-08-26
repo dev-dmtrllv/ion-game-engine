@@ -1,55 +1,37 @@
 #pragma once
 
 #include "pch.hpp"
-#include <tlhelp32.h>
 
 namespace ion
 {
+	class Process;
+
 	class Process
 	{
+	public:
+#ifdef _WIN32
+		using Handle = HANDLE;
+#endif
+
 	private:
-		std::unordered_map<int, int> processes_;
+		static std::size_t getParentID(std::size_t pid);
+		static std::string getExecPath(Handle handle);
 
 	public:
-		static std::size_t getParentID(std::size_t pid)
-		{
-			HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-			PROCESSENTRY32 pe = { 0 };
-			pe.dwSize = sizeof(PROCESSENTRY32);
+		static Process current();
 
-			if (Process32First(h, &pe))
-			{
-				do
-				{
-					if (pe.th32ProcessID == pid)
-					{
-						CloseHandle(h);
-						return pe.th32ParentProcessID;
-					}
-				}
-				while (Process32Next(h, &pe));
-			}
-			
-			CloseHandle(h);
-			return 0;
-		}
-
-		static void fromID(std::size_t pid)
-		{
-			
-		}
-
-		static Process& current()
-		{
-			static Process currentProcess;
-			return currentProcess;
-		}
-
-		Process();
+		Process(std::size_t pid);
+		~Process();
 
 		const std::size_t pid;
 		const std::size_t ppid;
 
 	private:
+#ifdef _WIN32
+		const HANDLE handle_;
+#endif
+
+	public:
+		const std::string execPath;
 	};
 }

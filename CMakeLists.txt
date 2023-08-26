@@ -6,7 +6,7 @@ file(GLOB ion_srcs CONFIGURE_DEPENDS "include/*.h" "src/*.cpp" "include/js/*.h" 
 
 add_executable(ion WIN32 ${ion_srcs})
 
-target_precompile_headers(ion PUBLIC include/pch.hpp)
+target_precompile_headers(ion PUBLIC "include/pch.hpp")
 
 include_directories(ion include)
 
@@ -37,6 +37,9 @@ if(MSVC)
 
 	string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 	string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+
+	string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+	string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 
 	target_link_libraries(ion ${PROJECT_SOURCE_DIR}/dependencies/win/v8/x64.${V8_BUILD_TYPE}/obj/v8_monolith.lib
 		${PROJECT_SOURCE_DIR}/dependencies/win/v8/x64.${V8_BUILD_TYPE}/obj/v8_libbase.lib
